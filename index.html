@@ -1,0 +1,31 @@
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drawing</title>
+    <style>
+	#colorPickersContainer {
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		z-index: 10;
+		background-color: rgba(0, 0, 0, 0.7); 
+		padding: 10px;
+		border-radius: 5px;
+		color: white;
+	}
+	body {
+    margin: 0;
+  	}
+    </style>
+  </head>
+  <body>
+	<div id="colorPickersContainer">
+		<label for="startColorPicker">Color1:</label>
+		<input type="color" id="startColorPicker" value="#FF0000">
+		<label for="endColorPicker">Color2:</label>
+		<input type="color" id="endColorPicker" value="#0000FF">
+	</div>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
