@@ -8,7 +8,7 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, w / h, 1, 1000);
 camera.position.z = 5;
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(w, h);
@@ -61,36 +61,29 @@ function getClicked3DPoint(evt, distance, excludeObjects) {
     mousePosition.x = ((evt.clientX - canvasPosition.left) / renderer.domElement.width) * 2 - 1;
     mousePosition.y = -((evt.clientY - canvasPosition.top) / renderer.domElement.height) * 2 + 1;
 
-    scene.traverse(function (object) {
-        if (object instanceof THREE.Mesh) {
-            object.updateMatrixWorld(true);
-        }
-    });
-
-
     rayCaster.setFromCamera(mousePosition, camera);
 
-    const allObjects = scene.children;
-    const objectsToCheck = scene.children.filter(obj => !excludeObjects.includes(obj));
-    const intersects = rayCaster.intersectObjects(objectsToCheck);
-     
+    let objectsToCheck; 
+    let intersects;
+    if(lineOrigin == null){
+        objectsToCheck = scene.children.filter(obj => !excludeObjects.includes(obj));
+        intersects = rayCaster.intersectObjects(objectsToCheck);
+    }
+    
     let clickedPoint;
     
-    if(intersects.length > 0){
+    if(intersects != null  && intersects.length > 0){
         clickedPoint = intersects[0].point;
         lineOrigin = clickedPoint;
     }   
-    else {
+    else {  
         const direction = rayCaster.ray.direction.clone().normalize();
-
         clickedPoint = rayCaster.ray.origin.clone().add(direction.multiplyScalar(distance));
     } 
 
     if (lineOrigin != null) {
         const direction = rayCaster.ray.direction.clone().normalize();
-        const cameraDirection = new THREE.Vector3().subVectors(rayCaster.ray.origin, camera.position).normalize();
-        const adjustedDistance = cameraDirection.dot(direction) * distance;
-        lineOrigin = clickedPoint;
+        clickedPoint = rayCaster.ray.origin.clone().add(direction.multiplyScalar(camera.position.distanceTo(lineOrigin)));
     }
 
     return clickedPoint; 
@@ -152,6 +145,7 @@ composer.addPass(bloomPass);
 
 
 function animate(t = 0) {
+
   requestAnimationFrame(animate);
   composer.render(scene, camera);
   controls.update();
