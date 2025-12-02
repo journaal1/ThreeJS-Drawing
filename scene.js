@@ -5,17 +5,12 @@ import {RenderPass} from "three/addons/postprocessing/RenderPass.js";
 import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass.js";
 import {MeshLine, MeshLineMaterial} from 'three.meshline';
 
-export function initScene(container, startColorPicker, endColorPicker) {
+export function initScene(container) {
     const w = container.clientWidth || 300;
     const h = container.clientHeight || 300;
 
-    if (w < 10 || h < 10) {
-        console.warn("Container too small, delaying init");
-        return {
-            cleanup: () => {
-            }
-        };
-    }
+    const startColor = "#f707ff";
+    const endColor = "#11ff00";
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, w / h, 1, 1000);
@@ -26,7 +21,7 @@ export function initScene(container, startColorPicker, endColorPicker) {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
-    
+
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.03;
@@ -48,17 +43,6 @@ export function initScene(container, startColorPicker, endColorPicker) {
     let allLinesMeshes = [];
     let allLineGeometries = [];
     let drawingPlane = null;
-
-    const hoverSphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-    const hoverSphereMaterial = new THREE.MeshBasicMaterial({
-        color: 0x00ff00,
-        transparent: true,
-        opacity: 0.8,
-        depthTest: false
-    });
-    const hoverSphere = new THREE.Mesh(hoverSphereGeometry, hoverSphereMaterial);
-    hoverSphere.visible = false;
-    scene.add(hoverSphere);
 
     function getCanvasPosition() {
         return renderer.domElement.getBoundingClientRect();
@@ -136,9 +120,6 @@ export function initScene(container, startColorPicker, endColorPicker) {
                         snapPoint
                     );
 
-                    hoverSphere.position.copy(snapPoint);
-                    hoverSphere.visible = true;
-
                     return {point: snapPoint};
                 }
             }
@@ -150,8 +131,6 @@ export function initScene(container, startColorPicker, endColorPicker) {
                 cameraDirection.clone().negate(),
                 planePoint
             );
-
-            hoverSphere.visible = false;
         }
 
         if (drawingPlane) {
@@ -171,7 +150,7 @@ export function initScene(container, startColorPicker, endColorPicker) {
         currentLine = new MeshLine();
 
         const material = new MeshLineMaterial({
-            color: new THREE.Color(startColorPicker.value),
+            color: new THREE.Color(startColor),
             opacity: 1,
             sizeAttenuation: false,
             lineWidth: 0.1,
@@ -204,10 +183,10 @@ export function initScene(container, startColorPicker, endColorPicker) {
         currentPoints.push(newPoint.clone());
 
         const material = currentLineMesh.material;
-        const startColor = new THREE.Color(startColorPicker.value);
-        const endColor = new THREE.Color(endColorPicker.value);
+        const start = new THREE.Color(startColor);
+        const end = new THREE.Color(endColor);
         const lerpFactor = Math.min(currentPoints.length / 200, 1);
-        material.color = startColor.clone().lerp(endColor, lerpFactor);
+        material.color = start.clone().lerp(end, lerpFactor);
 
         const geometry = new THREE.BufferGeometry().setFromPoints(currentPoints);
         currentLine.setGeometry(geometry);
@@ -236,7 +215,6 @@ export function initScene(container, startColorPicker, endColorPicker) {
         });
         allLinesMeshes = [];
         allLineGeometries = [];
-        hoverSphere.visible = false;
         drawingPlane = null;
     }
 
@@ -263,23 +241,6 @@ export function initScene(container, startColorPicker, endColorPicker) {
             const result = getClicked3DPoint(evt, false);
             if (result) {
                 addPointToCurrentLine(result.point);
-            }
-        } else if (!isMouseDown) {
-            // Hover preview
-            const canvasPosition = getCanvasPosition();
-            mousePosition.x = ((evt.clientX - canvasPosition.left) / renderer.domElement.width) * 2 - 1;
-            mousePosition.y = -((evt.clientY - canvasPosition.top) / renderer.domElement.height) * 2 + 1;
-
-            rayCaster.setFromCamera(mousePosition, camera);
-
-            if (allLineGeometries.length > 0) {
-                const result = findClosestPointOnLines(rayCaster.ray);
-                if (result.point && result.distance < Infinity) {
-                    hoverSphere.position.copy(result.point);
-                    hoverSphere.visible = true;
-                } else {
-                    hoverSphere.visible = false;
-                }
             }
         }
     };
@@ -328,7 +289,6 @@ export function initScene(container, startColorPicker, endColorPicker) {
     const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(container);
 
-    // Cleanup
     return {
         cleanup: () => {
             cancelAnimationFrame(animationId);
