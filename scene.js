@@ -1,9 +1,10 @@
 import * as THREE from "three";
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {EffectComposer} from "three/addons/postprocessing/EffectComposer.js";
-import {RenderPass} from "three/addons/postprocessing/RenderPass.js";
-import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass.js";
-import {MeshLine, MeshLineMaterial} from 'three.meshline';
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { MeshLine, MeshLineMaterial } from "three.meshline";
+
 
 export function initScene(container) {
     const w = container.clientWidth || 300;
